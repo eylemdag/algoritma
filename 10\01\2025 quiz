@@ -1,0 +1,92 @@
+!pip install geoip2
+
+import requests
+import json
+import pandas as pd
+import geoip2.database
+import os
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+geoip_db_path = '/content/GeoLite2-Country.mmdb'
+
+
+with open('output.json', 'w') as f:
+    f.write('')
+
+
+for page in range(1, 10):
+    response = requests.get(
+        f'https://www.usom.gov.tr/api/address/index?type=ip&page={page}',
+        headers={'accept': 'application/json'}
+    )
+
+
+    with open('output.json', 'a') as f:
+        json.dump(response.json(), f)
+        f.write('\n')
+
+print("Veriler output.json dosyasına kaydedildi.")
+
+
+with open('output.json', 'r') as f:
+
+    json_lines = f.readlines()
+
+
+data = {
+    "id": [],
+    "url": [],
+    "type": [],
+    "desc": [],
+    "source": [],
+    "date": [],
+    "criticality_level": [],
+    "connectiontype": []
+}
+
+
+for line in json_lines:
+    page_data = json.loads(line)
+    for model in page_data["models"]:
+        data["id"].append(model["id"])
+        data["url"].append(model["url"])
+        data["type"].append(model["type"])
+        data["desc"].append(model["desc"])
+        data["source"].append(model["source"])
+        data["date"].append(model["date"])
+        data["criticality_level"].append(model["criticality_level"])
+        data["connectiontype"].append(model["connectiontype"])
+
+
+print(data)
+
+
+df = pd.DataFrame(data)
+
+
+def get_country(ip):
+    try:
+        with geoip2.database.Reader(geoip_db_path) as reader:
+            response = reader.country(ip)
+            return response.country.name
+    except Exception as e:
+        print(f"Hata: {e}")
+        return "Unknown"
+
+
+df['country'] = df['url'].apply(get_country)
+
+
+print(df)
+
+
+plt.figure(figsize=(10, 6))
+sns.countplot(data=df, x='criticality_level', hue='country', palette='Set3')
+plt.title('Kritiklik Seviyesine Göre Ülke Dağılımı')
+plt.xlabel('Kritiklik Seviyesi')
+plt.ylabel('Sayı')
+plt.legend(title='Ülke', bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.show()
+
