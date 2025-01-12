@@ -1,0 +1,112 @@
+import time
+
+
+def measure_python_runtime():
+    start_time = time.time()  
+    
+    total = 0
+    for i in range(1, 1000000):
+        total += i
+    
+    end_time = time.time() 
+    runtime = end_time - start_time  
+    return runtime
+
+
+python_runtime = measure_python_runtime()
+print(f"Python çalışma süresi: {python_runtime:.6f} saniye")
+
+
+
+
+
+
+
+
+c_code = """
+#include <stdio.h>
+
+int main() {
+    long long total = 0;
+    for (int i = 1; i <= 1000000; i++) {
+        total += i;
+    }
+    printf("%lld\\n", total);
+    return 0;
+}
+"""
+
+
+with open("/content/example.c", "w") as f:
+    f.write(c_code)
+
+
+!gcc /content/example.c -o /content/example
+
+import subprocess
+import time
+
+def measure_c_runtime():
+    start_time = time.time() 
+    
+    
+    subprocess.run(["/content/example"], check=True) 
+    
+    end_time = time.time()
+    runtime = end_time - start_time  
+    return runtime
+
+
+try:
+    c_runtime = measure_c_runtime()
+    print(f"C çalışma süresi: {c_runtime:.6f} saniye")
+except subprocess.CalledProcessError as e:
+    print(f"Hata oluştu: {e}")
+
+
+
+
+
+
+
+
+
+
+java_code = """
+public class Example {
+    public static void main(String[] args) {
+        long total = 0;
+        for (int i = 1; i <= 1000000; i++) {
+            total += i;
+        }
+        System.out.println(total);
+    }
+}
+"""
+
+
+with open("/content/Example.java", "w") as f:
+    f.write(java_code)
+
+
+!javac /content/Example.java
+
+
+import subprocess
+import time
+
+def measure_java_runtime():
+    start_time = time.time() 
+    
+    
+    subprocess.run(["java", "Example"], check=True) 
+    
+    end_time = time.time()  
+    runtime = end_time - start_time  
+    return runtime
+
+try:
+    java_runtime = measure_java_runtime()
+    print(f"Java çalışma süresi: {java_runtime:.6f} saniye")
+except subprocess.CalledProcessError as e:
+    print(f"Hata oluştu: {e}")
